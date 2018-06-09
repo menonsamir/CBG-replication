@@ -8,6 +8,15 @@ import random
 from datetime import datetime
 import time
 
+############################################################
+#################         CONFIG        ####################
+############################################################
+START_DATE = datetime(2018,1,29,10,49,35)                 ##
+STOP_DATE =   datetime(2018,1,29,10,53,35)                ##
+DO_FETCH = False                                          ##
+############################################################
+
+
 # Haversine distance formula, from:
 # https://stackoverflow.com/questions/4913349/haversine-formula-in-python-bearing-and-distance-between-two-gps-points
 def distance(origin, destination):
@@ -321,12 +330,10 @@ for k in anchor_info_detail:
 json.dump(anchor_onlyrelevant, open("anchor_onlyrelevant.json","w"))
 '''
 
-startd = datetime(2018,1,29,10,49,35)
-stopd =   datetime(2018,1,29,10,53,35)
-start = str(int(time.mktime(startd.timetuple())))
-stop = str(int(time.mktime(stopd.timetuple())))
+start = str(int(time.mktime(START_DATE.timetuple())))
+stop = str(int(time.mktime(STOP_DATE.timetuple())))
 
-print startd,stopd
+print START_DATE, STOP_DATE
 print "--"
 
 anchor_to_probe = json.load(open("anchor_info.json","r"))
@@ -339,40 +346,44 @@ o = json.load(open("measurement_urls.json", "r"))
 pings = {}
 ping_mins = {}
 
-for r in o['results']:
-    #try:
-    result_url = r['result']+"&start="+start+"&stop="+stop+"&anchors-only=true"
-    dest = r['target'].split(".")[0]
-    #if dest in s:
-    #    continue
-    try:
-        readings = json.loads(urllib2.urlopen(result_url).read())
-    except:
-        print "unavailible for given time: ", dest
-        continue
-    #collected = {}
-    collected_min = {}
-    for reading in readings:
-        source = probe_to_anchor[str(reading["prb_id"])]
-        #if source not in collected:
-        #    collected[source] = []
-        if source not in collected_min:
-            collected_min[source] = 100000.0
-        #summary = {"max":reading["max"], "min":reading["min"], "measures": reading["result"]}
-        #collected[source].append(summary)
-        if float(reading["min"]) > 0.0:
-            collected_min[source] = min(collected_min[source],float(reading["min"]))
-    #pings[dest] = collected
-    ping_mins[dest] = collected_min
-    print dest
-    #except:
-    #    print "ERROR on", r['target']
+if DO_FETCH:
+    for r in o['results']:
+        #try:
+        result_url = r['result']+"&start="+start+"&stop="+stop+"&anchors-only=true"
+        dest = r['target'].split(".")[0]
+        #if dest in s:
+        #    continue
+        try:
+            readings = json.loads(urllib2.urlopen(result_url).read())
+        except:
+            print "unavailible for given time: ", dest
+            continue
+        #collected = {}
+        collected_min = {}
+        for reading in readings:
+            source = probe_to_anchor[str(reading["prb_id"])]
+            #if source not in collected:
+            #    collected[source] = []
+            if source not in collected_min:
+                collected_min[source] = 100000.0
+            #summary = {"max":reading["max"], "min":reading["min"], "measures": reading["result"]}
+            #collected[source].append(summary)
+            if float(reading["min"]) > 0.0:
+                collected_min[source] = min(collected_min[source],float(reading["min"]))
+        #pings[dest] = collected
+        ping_mins[dest] = collected_min
+        print dest
+        #except:
+        #    print "ERROR on", r['target']
+
 
 #json.dump(pings, open("pings.json","w"))
-json.dump(ping_mins, open("ping_mins.json","w"))
 
-'''
-ping_mins = json.load(open("ping_mins.json","r"))
+if DO_FETCH:
+    json.dump(ping_mins, open("ping_mins.json","w"))
+else:
+    ping_mins = json.load(open("ping_mins.json","r"))
+
 anchor_onlyrelevant = json.load(open("anchor_onlyrelevant.json","r"))
 anchors = list(sorted(anchor_onlyrelevant.keys()))
 points = []
@@ -399,7 +410,7 @@ for anchor in anchors:
 
 samp = points#random.sample(points, 100)
 
-plt.scatter(map(lambda x:x[0], samp), map(lambda x:x[1], samp), c='k', facecolors='k', marker=',', s=.1, alpha=0.1)
+plt.scatter(map(lambda x:x[0], samp), map(lambda x:x[1], samp), c='k', facecolors='k', marker='s', s=.1, alpha=0.1)
 plt.plot([0, 20000], [0, 200], 'k-', lw=0.5)
 #plt.plot([0, 4500], [0, 70], 'k-', lw=0.5, ls='dashed')
 plt.xlabel('Distance (km)', fontsize=12)
@@ -408,4 +419,4 @@ plt.xlim([0,4500])
 plt.ylim([0,90])
 #plt.show()
 plt.savefig("figure1.png", dpi=300)
-'''
+

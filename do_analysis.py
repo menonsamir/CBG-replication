@@ -13,11 +13,11 @@ from scipy import stats
 # https://github.com/hrldcpr/mercator.py
 import mercator
 
-from shapely.geometry import MultiPoint
+#from shapely.geometry import MultiPoint
 
-def get_area(points):
-    poly = MultiPoint(points).convex_hull
-    return poly.area
+#def get_area(points):
+#    poly = MultiPoint(points).convex_hull
+#    return poly.area
 
 def run_analysis(region="us", ablated=False):
     def test_in_circle(point,circle):
